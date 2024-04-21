@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js vr - 360 stereo video</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+		<div id="container"></div>
+
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> vr - 360 stereo video<br />
+			stereoscopic panoramic render by <a href="http://pedrofe.com/rendering-for-oculus-rift-with-arnold/" target="_blank" rel="noopener">pedrofe</a>. scene from <a href="http://www.meryproject.com/" target="_blank" rel="noopener">mery project</a>.
+		</div>
+
+		<!-- <video id="video" loop muted crossOrigin="anonymous" playsinline style="display:none">
+			<source src="textures/MaryOculus.webm">
+			<source src="textures/MaryOculus.mp4">
+		</video> -->
+
+
+		<video id="video" loop crossOrigin="anonymous" playsinline style="display:none">
+			<source src="textures/sintel.ogv" type='video/ogg; codecs="theora, vorbis"'>
+			<source src="textures/sintel.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+		</video>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { VRButton } from 'three/addons/webxr/VRButton.js';
+            const container = document.getElementById( 'container' );
+				container.addEventListener( 'click', function () {
+
+					video.play();
+
+				} );
+			// Create a new scene for the video overlay
+const videoScene = new THREE.Scene();
+
+// Create a new camera for the video overlay
+const videoCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+// Set the initial position and orientation of the video camera
+videoCamera.position.set(0, 0, 0);
+videoCamera.lookAt(0, 0, -1);
+const sbsVideo = document.getElementById( 'video' );
+sbsVideo.play();
+// Create a video texture for the SBS video
+const videoTexture = new THREE.VideoTexture(sbsVideo);
+videoTexture.format = THREE.RGBFormat;
+
+// Create a plane geometry for the video overlay
+const videoGeometry = new THREE.PlaneGeometry(16, 9);
+
+// Create a material using the video texture
+const videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture, side: THREE.DoubleSide });
+
+// Create a mesh using the video geometry and material
+const videoMesh = new THREE.Mesh(videoGeometry, videoMaterial);
+
+// Position the video mesh in front of the user's view
+videoMesh.position.set(0, 0, -10);
+
+// Add the video mesh to the video scene
+videoScene.add(videoMesh);
+
+const renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.xr.enabled = true;
+				renderer.xr.setReferenceSpaceType( 'local' );
+				container.appendChild( renderer.domElement );
+
+				document.body.appendChild( VRButton.createButton( renderer ) );
+
+// Function to update the video overlay position and orientation based on the VR headset
+function updateVideoOverlay() {
+    const vrDisplay = renderer.xr.getSession()?.device;
+
+    if (vrDisplay && vrDisplay.isPresenting) {
+        const pose = vrDisplay.getFrameData().pose;
+
+        // Update the position and orientation of the video camera based on the VR headset pose
+        videoCamera.position.copy(pose.position);
+        videoCamera.quaternion.copy(pose.orientation);
+
+        // Update the position of the video mesh in front of the user's view
+        videoMesh.position.set(0, 0, -10).applyQuaternion(pose.orientation);
+    }
+}
+
+// Render loop
+function animate() {
+    renderer.setAnimationLoop(() => {
+        // Update the video overlay position and orientation
+        updateVideoOverlay();
+
+        // Render the video scene
+        renderer.render(videoScene, videoCamera);
+
+        // // Render the main scene (your 3D environment)
+        // renderer.render(scene, camera);
+    });
+}
+
+// Start the animation loop
+animate();
+
+
+			
+				
+				
+		</script>
+	</body>
+</html>
